@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MBG Community — Breakout Room Generator</title>
+<style>
+  :root{
+    --orange:#e8622c;
+    --orange-dark:#c94f1f;
+    --bg:#faf7f3;
+    --card:#ffffff;
+    --ink:#2b2620;
+    --muted:#7a7168;
+    --line:#e8e0d6;
+    --aktif:#1f8a5f;
+    --aktif-bg:#e6f6ee;
+    --pasif:#a05a2c;
+    --pasif-bg:#fbeee1;
+    --neutral:#5a5f6b;
+    --neutral-bg:#eef0f4;
+    --warn:#a02a20;
+    --warn-bg:#fdeceb;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+  }
+  header{
+    background:linear-gradient(120deg,var(--orange),var(--orange-dark));
+    color:#fff;
+    padding:22px 28px;
+  }
+  header h1{margin:0;font-size:20px;font-weight:700;}
+  header p{margin:4px 0 0;font-size:13px;opacity:.9;}
+
+  .layout{
+    display:grid;
+    grid-template-columns:400px 1fr;
+    gap:20px;
+    padding:24px;
+    max-width:1280px;
+    margin:0 auto;
+  }
+  @media (max-width:920px){
+    .layout{grid-template-columns:1fr;}
+  }
+
+  .panel{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:18px;
+    margin-bottom:16px;
+  }
+  .panel h2{
+    font-size:15px;
+    margin:0 0 4px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .panel h2 .count{font-size:11.5px;color:var(--muted);font-weight:500;}
+  .hint{
+    font-size:12px;
+    color:var(--muted);
+    margin:0 0 10px;
+    line-height:1.5;
+  }
+
+  .list-box{
+    max-height:270px;
+    overflow-y:auto;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:4px 8px;
+    background:#fffdfb;
+  }
+  .list-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 2px;
+    border-bottom:1px solid #f2ede5;
+    font-size:13px;
+  }
+  .list-row:last-child{border-bottom:none;}
+  .list-row input[type=checkbox]{
+    width:16px;height:16px;
+    accent-color:var(--orange);
+    flex-shrink:0;
+  }
+  .list-row .nm{flex:1;}
+  .list-row.unchecked .nm{color:var(--muted);text-decoration:line-through;}
+
+  .pill-toggle{
+    display:flex;
+    border:1px solid var(--line);
+    border-radius:20px;
+    overflow:hidden;
+    flex-shrink:0;
+  }
+  .pill-toggle button{
+    border:none;
+    background:#fff;
+    font-size:10.5px;
+    font-weight:700;
+    padding:3px 9px;
+    cursor:pointer;
+    color:var(--muted);
+  }
+  .pill-toggle button.active.aktif{background:var(--aktif-bg);color:var(--aktif);}
+  .pill-toggle button.active.pasif{background:var(--pasif-bg);color:var(--pasif);}
+
+  .remove-x{
+    border:none;background:none;color:var(--muted);
+    cursor:pointer;font-size:14px;padding:0 3px;flex-shrink:0;
+  }
+  .remove-x:hover{color:var(--warn);}
+
+  .add-row{
+    display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;
+  }
+  .add-row input[type=text]{
+    flex:1;min-width:100px;
+    border:1px solid var(--line);border-radius:6px;padding:7px 9px;font-size:12.5px;
+  }
+  .add-row select{
+    border:1px solid var(--line);border-radius:6px;padding:7px 6px;font-size:12.5px;
+  }
+  .add-row button{
+    border:none;background:var(--ink);color:#fff;border-radius:6px;
+    padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer;
+  }
+  .add-row button:hover{opacity:.85;}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
+  .chip{
+    display:flex;align-items:center;gap:6px;
+    background:var(--neutral-bg);color:var(--ink);
+    border-radius:20px;padding:5px 6px 5px 12px;font-size:12.5px;
+  }
+  .chip .remove-x{color:var(--neutral);}
+
+  .row-inline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .row-inline label{margin:0;font-size:13px;font-weight:600;}
+  input[type=number]{
+    width:80px;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:13px;
+  }
+
+  .btns{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+  button.main-btn{
+    border:none;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;
+  }
+  button.main-btn:disabled{opacity:.45;cursor:not-allowed;}
+  .btn-primary{background:var(--orange);color:#fff;}
+  .btn-primary:hover:not(:disabled){background:var(--orange-dark);}
+  .btn-secondary{background:#fff;color:var(--ink);border:1px solid var(--line);}
+  .btn-secondary:hover:not(:disabled){background:#f2ede6;}
+  .btn-ghost{background:none;color:var(--muted);border:1px solid var(--line);font-size:11.5px !important;padding:6px 10px !important;}
+
+  .error, .warn-box{
+    margin-top:10px;
+    background:var(--warn-bg);
+    border:1px solid #f3b8b3;
+    color:var(--warn);
+    padding:10px 12px;
+    border-radius:8px;
+    font-size:12.5px;
+    display:none;
+  }
+
+  .stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 14px;min-width:100px;}
+  .stat .num{font-size:19px;font-weight:700;}
+  .stat .lbl{font-size:11px;color:var(--muted);}
+
+  .rooms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;}
+  .room-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;}
+  .room-card h3{margin:0 0 2px;font-size:14px;color:var(--orange-dark);}
+  .room-card .fac{font-size:12.5px;color:var(--muted);margin-bottom:10px;padding-bottom:8px;border-bottom:1px dashed var(--line);}
+  .room-card ol{margin:0;padding-left:18px;font-size:13px;}
+  .room-card li{margin-bottom:6px;}
+  .badge{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:20px;margin-left:6px;vertical-align:middle;}
+  .badge.aktif{background:var(--aktif-bg);color:var(--aktif);}
+  .badge.pasif{background:var(--pasif-bg);color:var(--pasif);}
+  .badge.neutral{background:var(--neutral-bg);color:var(--neutral);}
+  .room-count{margin-top:10px;font-size:11.5px;color:var(--muted);}
+
+  .empty-state{color:var(--muted);font-size:13px;padding:40px 10px;text-align:center;}
+
+  footer{text-align:center;font-size:11.5px;color:var(--muted);padding:20px;}
+
+  @media print{
+    header, .input-col, .btns, footer{display:none !important;}
+    .layout{grid-template-columns:1fr;padding:0;}
+    body{background:#fff;}
+    .room-card{break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>MBG Community — Breakout Room Generator</h1>
+</header>
+
+<div class="layout">
+
+  <div class="input-col">
+
+    <div class="panel">
+      <h2>Facilitator <span class="count" id="facCount"></span></h2>
+      <p class="hint">Centang facilitator yang hadir sesi ini.</p>
+      <div class="list-box" id="facilitatorList"></div>
+      <div class="add-row">
+        <input type="text" id="newFacName" placeholder="Nama facilitator baru">
+        <button id="addFacBtn">+ Tambah</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Peserta <span class="count" id="pesCount"></span></h2>
+      <p class="hint">Centang peserta yang hadir. Klik badge Aktif/Pasif untuk ubah status.</p>
+      <div class="list-box" id="participantList"></div>
+      <div class="add-row">
+        <input type="text" id="newPesName" placeholder="Nama peserta baru">
+        <select id="newPesStatus">
+          <option value="aktif">Aktif</option>
+          <option value="pasif">Pasif</option>
+        </select>
+        <button id="addPesBtn">+ Tambah</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Pasangan yang Dipisah</h2>
+      <p class="hint">Dua orang ini akan diusahakan tidak berada di room yang sama.</p>
+      <div class="chips" id="pairChips"></div>
+      <div class="add-row">
+        <select id="pairA"></select>
+        <select id="pairB"></select>
+        <button id="addPairBtn">+ Pisahkan</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="row-inline">
+        <label for="roomCount">Jumlah Room</label>
+        <input type="number" id="roomCount" min="1" value="1">
+      </div>
+      <p class="hint" id="roomHint"></p>
+      <div class="btns">
+        <button class="main-btn btn-primary" id="generateBtn">Generate Pembagian</button>
+        <button class="main-btn btn-secondary" id="reshuffleBtn" disabled>Acak Ulang</button>
+      </div>
+      <div class="btns">
+        <button class="main-btn btn-ghost" id="resetBtn">Reset ke Data Default</button>
+      </div>
+      <div class="error" id="errorBox"></div>
+    </div>
+
+  </div>
+
+  <div>
+    <div class="panel">
+      <h2>Hasil Pembagian</h2>
+      <div class="warn-box" id="warnBox"></div>
+      <div id="output">
+        <div class="empty-state">Centang facilitator &amp; peserta di kiri, lalu klik <strong>Generate Pembagian</strong>.</div>
+      </div>
+      <div class="btns" id="resultBtns" style="display:none;">
+        <button class="main-btn btn-secondary" id="copyBtn">Salin sebagai Teks</button>
+        <button class="main-btn btn-secondary" id="printBtn">Cetak / Simpan PDF</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>Dibuat untuk MBG Community · Buka file HTML ini langsung di browser, tidak perlu instalasi atau server. Data tersimpan otomatis di browser ini.</footer>
+
+<script>
+const STORAGE_KEY = 'mbg_breakout_state_v1';
+
+const DEFAULT_FACILITATORS = ['Aries','Ray','Vania'];
+
+const DEFAULT_PARTICIPANTS = [
+  {name:'Abi', status:'aktif'},
+  {name:'Andrea', status:'pasif'},
+  {name:'Angelyn', status:'pasif'},
+  {name:'Claire', status:'pasif'},
+  {name:'Daniel', status:'aktif'},
+  {name:'Deky', status:'aktif'},
+  {name:'Emiana Milenia', status:'pasif'},
+  {name:'Febi', status:'pasif'},
+  {name:'Felix Jonathan', status:'pasif'},
+  {name:'Fernando', status:'aktif'},
+  {name:'Helen', status:'aktif'},
+  {name:'Ica', status:'pasif'},
+  {name:'Joseph', status:'aktif'},
+  {name:'Kathryn Kezia', status:'pasif'},
+  {name:'Lenny', status:'aktif'},
+  {name:'Mandy', status:'aktif'},
+  {name:'Michelle', status:'pasif'},
+  {name:'Mike', status:'aktif'},
+  {name:'Paris', status:'pasif'},
+  {name:'Pepe', status:'pasif'},
+  {name:'Ruben', status:'aktif'},
+  {name:'Ruth', status:'pasif'},
+  {name:'Shalvyne', status:'pasif'},
+  {name:'Vanessa', status:'pasif'},
+  {name:'Widya.', status:'aktif'},
+  {name:'Widya Widjaya', status:'aktif'},
+];
+
+const DEFAULT_AVOID_PAIRS = [
+  ['Deky','Widya.'],
+  ['Ruben','Andrea'],
+];
+
+let facilitators = [];   // {name, checked}
+let participants = [];   // {name, status, checked}
+let avoidPairs = [];     // [nameA, nameB]
+let lastRooms = null;
+
+function defaultState(){
+  return {
+    facilitators: DEFAULT_FACILITATORS.map(name=>({name, checked:true})),
+    participants: DEFAULT_PARTICIPANTS.map(p=>({...p, checked:true})),
+    avoidPairs: DEFAULT_AVOID_PAIRS.map(p=>p.slice()),
+  };
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed.facilitators && parsed.participants){
+        facilitators = parsed.facilitators;
+        participants = parsed.participants;
+        avoidPairs = parsed.avoidPairs || [];
+        return;
+      }
+    }
+  }catch(e){}
+  const d = defaultState();
+  facilitators = d.facilitators;
+  participants = d.participants;
+  avoidPairs = d.avoidPairs;
+}
+
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({facilitators, participants, avoidPairs}));
+}
+
+function sortByName(arr){
+  return arr.slice().sort((a,b)=> a.name.localeCompare(b.name, 'id', {sensitivity:'base'}));
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+// ---------- RENDER: FACILITATOR ----------
+function renderFacilitators(){
+  const box = document.getElementById('facilitatorList');
+  const sorted = sortByName(facilitators);
+  box.innerHTML = sorted.map(f=>`
+    <div class="list-row ${f.checked?'':'unchecked'}" data-name="${escapeAttr(f.name)}">
+      <input type="checkbox" ${f.checked?'checked':''} data-role="fac-check" data-name="${escapeAttr(f.name)}">
+      <span class="nm">${escapeHtml(f.name)}</span>
+      <button class="remove-x" data-role="fac-remove" data-name="${escapeAttr(f.name)}" title="Hapus dari daftar">✕</button>
+    </div>
+  `).join('') || '<p class="hint" style="margin:8px 0;">Belum ada facilitator.</p>';
+
+  const checkedCount = facilitators.filter(f=>f.checked).length;
+  document.getElementById('facCount').textContent = `${checkedCount}/${facilitators.length} hadir`;
+  updateRoomCountDefault();
+}
+
+// ---------- RENDER: PARTICIPANTS ----------
+function renderParticipants(){
+  const box = document.getElementById('participantList');
+  const sorted = sortByName(participants);
+  box.innerHTML = sorted.map(p=>`
+    <div class="list-row ${p.checked?'':'unchecked'}" data-name="${escapeAttr(p.name)}">
+      <input type="checkbox" ${p.checked?'checked':''} data-role="pes-check" data-name="${escapeAttr(p.name)}">
+      <span class="nm">${escapeHtml(p.name)}</span>
+      <div class="pill-toggle" data-name="${escapeAttr(p.name)}">
+        <button type="button" class="${p.status==='aktif'?'active aktif':''}" data-role="pes-status" data-status="aktif" data-name="${escapeAttr(p.name)}">Aktif</button>
+        <button type="button" class="${p.status==='pasif'?'active pasif':''}" data-role="pes-status" data-status="pasif" data-name="${escapeAttr(p.name)}">Pasif</button>
+      </div>
+      <button class="remove-x" data-role="pes-remove" data-name="${escapeAttr(p.name)}" title="Hapus dari daftar">✕</button>
+    </div>
+  `).join('') || '<p class="hint" style="margin:8px 0;">Belum ada peserta.</p>';
+
+  const checkedCount = participants.filter(p=>p.checked).length;
+  document.getElementById('pesCount').textContent = `${checkedCount}/${participants.length} hadir`;
+
+  renderPairSelects();
+}
+
+// ---------- RENDER: AVOID PAIRS ----------
+function renderPairs(){
+  const box = document.getElementById('pairChips');
+  if(avoidPairs.length===0){
+    box.innerHTML = '<p class="hint" style="margin:0;">Belum ada pasangan yang dipisah.</p>';
+  } else {
+    box.innerHTML = avoidPairs.map((pair, idx)=>`
+      <div class="chip">
+        <span>${escapeHtml(pair[0])} ↔ ${escapeHtml(pair[1])}</span>
+        <button class="remove-x" data-role="pair-remove" data-idx="${idx}">✕</button>
+      </div>
+    `).join('');
+  }
+}
+
+function renderPairSelects(){
+  const selA = document.getElementById('pairA');
+  const selB = document.getElementById('pairB');
+  const names = sortByName(participants).map(p=>p.name);
+  const optionsHtml = names.map(n=>`<option value="${escapeAttr(n)}">${escapeHtml(n)}</option>`).join('');
+  selA.innerHTML = optionsHtml;
+  selB.innerHTML = optionsHtml;
+  if(names.length>1) selB.selectedIndex = 1;
+}
+
+function updateRoomCountDefault(){
+  const roomCountEl = document.getElementById('roomCount');
+  const roomHintEl = document.getElementById('roomHint');
+  const checkedFac = facilitators.filter(f=>f.checked).length;
+  if(checkedFac > 0){
+    roomCountEl.max = checkedFac;
+    if(!roomCountEl.dataset.userEdited || parseInt(roomCountEl.value,10) > checkedFac){
+      roomCountEl.value = checkedFac;
+    }
+    roomHintEl.textContent = `Maks ${checkedFac} room (1 facilitator / room, sesuai facilitator yang hadir)`;
+  } else {
+    roomHintEl.textContent = 'Centang minimal 1 facilitator.';
+  }
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escapeAttr(s){ return escapeHtml(s); }
+
+// ---------- EVENTS: FACILITATOR ----------
+document.getElementById('facilitatorList').addEventListener('change', e=>{
+  if(e.target.dataset.role==='fac-check'){
+    const name = e.target.dataset.name;
+    const f = facilitators.find(x=>x.name===name);
+    if(f){ f.checked = e.target.checked; saveState(); renderFacilitators(); }
+  }
+});
+document.getElementById('facilitatorList').addEventListener('click', e=>{
+  if(e.target.dataset.role==='fac-remove'){
+    const name = e.target.dataset.name;
+    facilitators = facilitators.filter(x=>x.name!==name);
+    saveState(); renderFacilitators();
+  }
+});
+document.getElementById('addFacBtn').addEventListener('click', ()=>{
+  const input = document.getElementById('newFacName');
+  const name = input.value.trim();
+  if(!name) return;
+  if(facilitators.some(f=>f.name.toLowerCase()===name.toLowerCase())){ input.value=''; return; }
+  facilitators.push({name, checked:true});
+  input.value = '';
+  saveState(); renderFacilitators();
+});
+
+// ---------- EVENTS: PARTICIPANTS ----------
+document.getElementById('participantList').addEventListener('change', e=>{
+  if(e.target.dataset.role==='pes-check'){
+    const name = e.target.dataset.name;
+    const p = participants.find(x=>x.name===name);
+    if(p){ p.checked = e.target.checked; saveState(); renderParticipants(); }
+  }
+});
+document.getElementById('participantList').addEventListener('click', e=>{
+  if(e.target.dataset.role==='pes-remove'){
+    const name = e.target.dataset.name;
+    participants = participants.filter(x=>x.name!==name);
+    avoidPairs = avoidPairs.filter(pair=>!pair.includes(name));
+    saveState(); renderParticipants(); renderPairs();
+  }
+  if(e.target.dataset.role==='pes-status'){
+    const name = e.target.dataset.name;
+    const status = e.target.dataset.status;
+    const p = participants.find(x=>x.name===name);
+    if(p){ p.status = status; saveState(); renderParticipants(); }
+  }
+});
+document.getElementById('addPesBtn').addEventListener('click', ()=>{
+  const input = document.getElementById('newPesName');
+  const statusSel = document.getElementById('newPesStatus');
+  const name = input.value.trim();
+  if(!name) return;
+  if(participants.some(p=>p.name.toLowerCase()===name.toLowerCase())){ input.value=''; return; }
+  participants.push({name, status:statusSel.value, checked:true});
+  input.value='';
+  saveState(); renderParticipants();
+});
+
+// ---------- EVENTS: AVOID PAIRS ----------
+document.getElementById('addPairBtn').addEventListener('click', ()=>{
+  const a = document.getElementById('pairA').value;
+  const b = document.getElementById('pairB').value;
+  if(!a || !b || a===b) return;
+  const exists = avoidPairs.some(p => (p[0]===a&&p[1]===b) || (p[0]===b&&p[1]===a));
+  if(exists) return;
+  avoidPairs.push([a,b]);
+  saveState(); renderPairs();
+});
+document.getElementById('pairChips').addEventListener('click', e=>{
+  if(e.target.dataset.role==='pair-remove'){
+    const idx = parseInt(e.target.dataset.idx,10);
+    avoidPairs.splice(idx,1);
+    saveState(); renderPairs();
+  }
+});
+
+document.getElementById('roomCount').addEventListener('input', e=>{
+  e.target.dataset.userEdited = '1';
+});
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  if(!confirm('Reset semua data (facilitator, peserta, pasangan) ke default awal? Perubahan yang sudah kamu buat akan hilang.')) return;
+  const d = defaultState();
+  facilitators = d.facilitators;
+  participants = d.participants;
+  avoidPairs = d.avoidPairs;
+  document.getElementById('roomCount').dataset.userEdited = '';
+  saveState();
+  renderFacilitators(); renderParticipants(); renderPairs();
+  output.innerHTML = '<div class="empty-state">Centang facilitator &amp; peserta di kiri, lalu klik <strong>Generate Pembagian</strong>.</div>';
+  resultBtns.style.display='none';
+  reshuffleBtn.disabled = true;
+  showWarn('');
+  showError('');
+});
+
+// ---------- GENERATION LOGIC ----------
+const errorBox = document.getElementById('errorBox');
+const warnBox = document.getElementById('warnBox');
+const output = document.getElementById('output');
+const resultBtns = document.getElementById('resultBtns');
+const generateBtn = document.getElementById('generateBtn');
+const reshuffleBtn = document.getElementById('reshuffleBtn');
+const copyBtn = document.getElementById('copyBtn');
+const printBtn = document.getElementById('printBtn');
+const roomCountEl = document.getElementById('roomCount');
+
+function showError(msg){
+  errorBox.textContent = msg;
+  errorBox.style.display = msg ? 'block' : 'none';
+}
+function showWarn(msg){
+  warnBox.textContent = msg;
+  warnBox.style.display = msg ? 'block' : 'none';
+}
+
+// Quota-based balanced assignment: guarantees each category (aktif/pasif/dll)
+// is spread with max-min difference <= 1 across rooms whenever mathematically
+// possible (i.e. whenever the category has at least as many people as there
+// are rooms), instead of relying on a fixed alternating pattern that can
+// systematically dump an entire category into only half the rooms.
+function assignCategoryToRooms(items, roomCount){
+  const shuffled = shuffle(items);
+  const n = shuffled.length;
+  const base = Math.floor(n / roomCount);
+  const remainder = n % roomCount;
+  const roomOrder = shuffle(Array.from({length:roomCount}, (_,i)=>i));
+  const extraRooms = new Set(roomOrder.slice(0, remainder));
+  const quota = Array.from({length:roomCount}, (_,r)=> base + (extraRooms.has(r) ? 1 : 0));
+  const perRoom = Array.from({length:roomCount}, ()=>[]);
+  let cursor = 0;
+  for(let r=0;r<roomCount;r++){
+    for(let q=0;q<quota[r];q++){
+      perRoom[r].push(shuffled[cursor]);
+      cursor++;
+    }
+  }
+  return perRoom;
+}
+
+function findRoomIndex(rooms, name){
+  return rooms.findIndex(r => r.members.some(m=>m.name===name));
+}
+
+function hasConflict(rooms, roomIdx, name, pairs, excludeName){
+  const partners = pairs.filter(([a,b])=> a===name || b===name).map(([a,b])=> a===name?b:a);
+  if(partners.length===0) return false;
+  return rooms[roomIdx].members.some(m => m.name!==excludeName && partners.includes(m.name));
+}
+
+function trySwapToResolve(rooms, conflictRoomIdx, personName, pairs){
+  const person = rooms[conflictRoomIdx].members.find(m=>m.name===personName);
+  if(!person) return false;
+  const otherRoomIdxs = shuffle(rooms.map((_,i)=>i).filter(i=>i!==conflictRoomIdx));
+  for(const otherIdx of otherRoomIdxs){
+    const candidatesAll = shuffle(rooms[otherIdx].members.slice());
+    const ordered = [
+      ...candidatesAll.filter(c=>c.status===person.status),
+      ...candidatesAll.filter(c=>c.status!==person.status)
+    ];
+    for(const candidate of ordered){
+      const okOther = !hasConflict(rooms, otherIdx, person.name, pairs, candidate.name);
+      const okConflict = !hasConflict(rooms, conflictRoomIdx, candidate.name, pairs, person.name);
+      if(okOther && okConflict){
+        rooms[conflictRoomIdx].members = rooms[conflictRoomIdx].members.filter(m=>m.name!==person.name).concat([candidate]);
+        rooms[otherIdx].members = rooms[otherIdx].members.filter(m=>m.name!==candidate.name).concat([person]);
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function resolveAvoidPairs(rooms, pairs){
+  const unresolved = [];
+  for(const [a,b] of pairs){
+    const ra = findRoomIndex(rooms, a);
+    const rb = findRoomIndex(rooms, b);
+    if(ra === -1 || rb === -1) continue; // salah satu tidak hadir sesi ini
+    if(ra === rb){
+      const solved = trySwapToResolve(rooms, ra, a, pairs) || trySwapToResolve(rooms, ra, b, pairs);
+      if(!solved) unresolved.push([a,b]);
+    }
+  }
+  return unresolved;
+}
+
+function buildAssignment(){
+  const presentFac = facilitators.filter(f=>f.checked).map(f=>f.name);
+  const presentPes = participants.filter(p=>p.checked).map(p=>({name:p.name, status:p.status}));
+  const roomCount = parseInt(roomCountEl.value, 10);
+
+  if(presentFac.length === 0){ showError('Centang minimal 1 facilitator yang hadir.'); return null; }
+  if(presentPes.length === 0){ showError('Centang minimal 1 peserta yang hadir.'); return null; }
+  if(!roomCount || roomCount < 1){ showError('Jumlah room minimal 1.'); return null; }
+  if(roomCount > presentFac.length){
+    showError(`Jumlah room (${roomCount}) tidak boleh lebih dari facilitator yang hadir (${presentFac.length}).`);
+    return null;
+  }
+  showError('');
+
+  const shuffledFac = shuffle(presentFac).slice(0, roomCount);
+  const rooms = shuffledFac.map(f => ({ facilitator: f, members: [] }));
+
+  const aktif = presentPes.filter(p=>p.status==='aktif');
+  const pasif = presentPes.filter(p=>p.status==='pasif');
+  const unspecified = presentPes.filter(p=>p.status!=='aktif' && p.status!=='pasif');
+
+  // Assign each status category to rooms independently so every room gets a
+  // fair, balanced mix of aktif/pasif (not just an even total headcount).
+  [aktif, pasif, unspecified].forEach(catItems=>{
+    if(catItems.length === 0) return;
+    const perRoom = assignCategoryToRooms(catItems, roomCount);
+    perRoom.forEach((list, r)=>{ rooms[r].members.push(...list); });
+  });
+
+  const relevantPairs = avoidPairs.filter(([a,b]) =>
+    presentPes.some(p=>p.name===a) && presentPes.some(p=>p.name===b)
+  );
+  const unresolved = resolveAvoidPairs(rooms, relevantPairs);
+
+  return {
+    rooms,
+    totalParticipants: presentPes.length,
+    aktifCount: aktif.length,
+    pasifCount: pasif.length,
+    unspecifiedCount: unspecified.length,
+    facilitatorsUnused: presentFac.length - roomCount,
+    unresolvedPairs: unresolved,
+  };
+}
+
+function statusLabel(status){
+  if(status==='aktif') return '<span class="badge aktif">Aktif</span>';
+  if(status==='pasif') return '<span class="badge pasif">Pasif</span>';
+  return '<span class="badge neutral">-</span>';
+}
+
+function render(result){
+  const { rooms, totalParticipants, aktifCount, pasifCount, unspecifiedCount, facilitatorsUnused, unresolvedPairs } = result;
+
+  if(unresolvedPairs && unresolvedPairs.length){
+    const list = unresolvedPairs.map(([a,b])=>`${a} & ${b}`).join('; ');
+    showWarn(`Belum bisa dipisah sepenuhnya karena keterbatasan jumlah room: ${list}. Coba klik "Acak Ulang" atau tambah jumlah room.`);
+  } else {
+    showWarn('');
+  }
+
+  let statsHtml = `
+    <div class="stats">
+      <div class="stat"><div class="num">${rooms.length}</div><div class="lbl">Room</div></div>
+      <div class="stat"><div class="num">${totalParticipants}</div><div class="lbl">Total Peserta</div></div>
+      <div class="stat"><div class="num">${aktifCount}</div><div class="lbl">Aktif</div></div>
+      <div class="stat"><div class="num">${pasifCount}</div><div class="lbl">Pasif</div></div>
+      ${unspecifiedCount ? `<div class="stat"><div class="num">${unspecifiedCount}</div><div class="lbl">Belum ditandai</div></div>` : ''}
+    </div>
+  `;
+  if(facilitatorsUnused > 0){
+    statsHtml += `<p class="hint">${facilitatorsUnused} facilitator hadir tapi tidak dipakai sesi ini (istirahat).</p>`;
+  }
+
+  const cardsHtml = `<div class="rooms-grid">` + rooms.map((r, idx)=>{
+    const sortedMembers = sortByName(r.members);
+    const a = r.members.filter(m=>m.status==='aktif').length;
+    const p = r.members.filter(m=>m.status==='pasif').length;
+    const u = r.members.filter(m=>m.status!=='aktif' && m.status!=='pasif').length;
+    return `
+      <div class="room-card">
+        <h3>Room ${idx+1}</h3>
+        <div class="fac">Facilitator: <strong>${escapeHtml(r.facilitator)}</strong></div>
+        <ol>
+          ${sortedMembers.map(m=>`<li>${escapeHtml(m.name)}${statusLabel(m.status)}</li>`).join('')}
+        </ol>
+        <div class="room-count">Total: ${r.members.length} peserta (${a} aktif, ${p} pasif${u?`, ${u} belum ditandai`:''})</div>
+      </div>
+    `;
+  }).join('') + `</div>`;
+
+  output.innerHTML = statsHtml + cardsHtml;
+  resultBtns.style.display = 'flex';
+  reshuffleBtn.disabled = false;
+}
+
+function generate(){
+  const result = buildAssignment();
+  if(!result) return;
+  lastRooms = result;
+  render(result);
+}
+
+function asPlainText(result){
+  const dateStr = new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+  let text = `MBG Community – Pembagian Breakout Room\nTanggal: ${dateStr}\n\n`;
+  result.rooms.forEach((r, idx)=>{
+    text += `Room ${idx+1} – Facilitator: ${r.facilitator}\n`;
+    sortByName(r.members).forEach((m, i)=>{
+      const tag = m.status==='aktif' ? ' (Aktif)' : m.status==='pasif' ? ' (Pasif)' : '';
+      text += `  ${i+1}. ${m.name}${tag}\n`;
+    });
+    text += `  Total: ${r.members.length} peserta\n\n`;
+  });
+  if(result.unresolvedPairs && result.unresolvedPairs.length){
+    text += `Catatan: belum terpisah sepenuhnya - ${result.unresolvedPairs.map(([a,b])=>`${a} & ${b}`).join('; ')}\n`;
+  }
+  return text;
+}
+
+generateBtn.addEventListener('click', generate);
+reshuffleBtn.addEventListener('click', generate);
+
+copyBtn.addEventListener('click', ()=>{
+  if(!lastRooms) return;
+  const text = asPlainText(lastRooms);
+  navigator.clipboard.writeText(text).then(()=>{
+    copyBtn.textContent = 'Tersalin ✓';
+    setTimeout(()=>copyBtn.textContent='Salin sebagai Teks', 1500);
+  }).catch(()=>{
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    copyBtn.textContent = 'Tersalin ✓';
+    setTimeout(()=>copyBtn.textContent='Salin sebagai Teks', 1500);
+  });
+});
+
+printBtn.addEventListener('click', ()=> window.print());
+
+// ---------- INIT ----------
+loadState();
+renderFacilitators();
+renderParticipants();
+renderPairs();
+</script>
+
+</body>
+</html>
